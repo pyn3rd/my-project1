@@ -264,8 +264,15 @@ def get_extensions():
     try:
         if extensions is None:
             return []
-        return sorted([f"{e.name} ({'enabled' if e.enabled else 'disabled'}{' builtin' if e.is_builtin else ''})" for e in extensions.extensions])
-    except (AssertionError, AttributeError, ImportError):
+        # 使用 getattr 安全地访问 extensions 属性，避免 AssertionError
+        try:
+            extensions_list = getattr(extensions, 'extensions', None)
+        except (AssertionError, AttributeError):
+            return []
+        if extensions_list is None:
+            return []
+        return sorted([f"{e.name} ({'enabled' if e.enabled else 'disabled'}{' builtin' if e.is_builtin else ''})" for e in extensions_list])
+    except (AssertionError, AttributeError, ImportError, Exception):
         return []
 
 
@@ -274,10 +281,17 @@ def get_loras():
     try:
         if extensions is None:
             return []
-        sys.path.append(extensions.extensions_builtin_dir)
+        # 使用 getattr 安全地访问 extensions_builtin_dir 属性，避免 AssertionError
+        try:
+            extensions_builtin_dir = getattr(extensions, 'extensions_builtin_dir', None)
+        except (AssertionError, AttributeError):
+            return []
+        if extensions_builtin_dir is None:
+            return []
+        sys.path.append(extensions_builtin_dir)
         from Lora import lora # pylint: disable=E0401
         loras = sorted([l for l in lora.available_loras.keys()])
-    except (AssertionError, AttributeError, ImportError):
+    except (AssertionError, AttributeError, ImportError, Exception):
         pass
     return loras
 
